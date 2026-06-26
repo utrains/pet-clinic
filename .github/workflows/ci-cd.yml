@@ -7,7 +7,7 @@ on:
     branches: [ main ]
 
 env:
-  JAVA_VERSION: '17'
+  JAVA_VERSION: '25'
   SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
   SONAR_PROJECT_KEY: ${{ vars.SONAR_PROJECT_KEY }}
   SONAR_ORGANIZATION: ${{ vars.SONAR_ORGANIZATION }}
