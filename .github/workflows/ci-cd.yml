@@ -196,28 +196,28 @@ jobs:
           JF_URL: https://mycompany.jfrog.io
           JF_USER: ${{ env.JF_USER }}
           JF_PASSWORD: ${{ env.JF_PASSWORD }}
-      - name: Setup JFrog CLI
-        uses: jfrog/setup-jfrog-cli@v4
-        env:
-          JF_URL: ${{ env.JFROG_URL }}
-          JF_ACCESS_TOKEN: ${{ steps.vault.outputs.jfrog_token }}
+      # - name: Setup JFrog CLI
+      #   uses: jfrog/setup-jfrog-cli@v4
+      #   env:
+      #     JF_URL: ${{ env.JFROG_URL }}
+      #     JF_ACCESS_TOKEN: ${{ steps.vault.outputs.jfrog_token }}
 
       - name: Verify JFrog connectivity
         run: jf rt ping
 
-      - name: Configure Maven repo for JFrog deploy
-        run: |
-          jf mvnc \
-            --repo-resolve-releases=${{ env.JFROG_REPO }} \
-            --repo-resolve-snapshots=${{ env.JFROG_REPO }} \
-            --repo-deploy-releases=${{ env.JFROG_REPO }} \
-            --repo-deploy-snapshots=${{ env.JFROG_REPO }}
+      # - name: Configure Maven repo for JFrog deploy
+      #   run: |
+      #     jf mvnc \
+      #       --repo-resolve-releases=${{ env.JFROG_REPO }} \
+      #       --repo-resolve-snapshots=${{ env.JFROG_REPO }} \
+      #       --repo-deploy-releases=${{ env.JFROG_REPO }} \
+      #       --repo-deploy-snapshots=${{ env.JFROG_REPO }}
 
-      - name: Build and deploy with JFrog CLI (collects build-info)
-        env:
-          JFROG_CLI_BUILD_NAME: spring-petclinic
-          JFROG_CLI_BUILD_NUMBER: ${{ github.run_number }}
-        run: |
-          jf rt build-collect-env
-          jf mvn -B clean deploy -DskipTests
-          jf rt build-publish
+      # - name: Build and deploy with JFrog CLI (collects build-info)
+      #   env:
+      #     JFROG_CLI_BUILD_NAME: spring-petclinic
+      #     JFROG_CLI_BUILD_NUMBER: ${{ github.run_number }}
+      #   run: |
+      #     jf rt build-collect-env
+      #     jf mvn -B clean deploy -DskipTests
+      #     jf rt build-publish
