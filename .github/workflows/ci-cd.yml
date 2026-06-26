@@ -186,10 +186,20 @@ jobs:
             --data "{\"role_id\":\"${VAULT_ROLE_ID}\",\"secret_id\":\"${VAULT_SECRET_ID}\"}" \
             "${VAULT_ADDR}/v1/auth/approle/login" | jq -r '.auth.client_token')
 
+          if [ -z "${VAULT_TOKEN}" ] || [ "${VAULT_TOKEN}" = "null" ]; then
+            echo "ERROR: Failed to authenticate to Vault — check VAULT_ROLE_ID and VAULT_SECRET_ID secrets."
+            exit 1
+          fi
+
           SECRET_JSON=$(curl -s --header "X-Vault-Token: ${VAULT_TOKEN}" \
             "${VAULT_ADDR}/v1/${VAULT_JFROG_PATH}")
 
           JFROG_TOKEN=$(echo "$SECRET_JSON" | jq -r '.data.data.access_token // .data.access_token')
+
+          if [ -z "${JFROG_TOKEN}" ] || [ "${JFROG_TOKEN}" = "null" ]; then
+            echo "ERROR: JFrog token is null — verify the Vault path '${VAULT_JFROG_PATH}' and key name."
+            exit 1
+          fi
 
           echo "::add-mask::${JFROG_TOKEN}"
           echo "jfrog_token=${JFROG_TOKEN}" >> "$GITHUB_OUTPUT"
@@ -205,19 +215,22 @@ jobs:
           JF_URL: ${{ env.JFROG_URL }}
           JF_ACCESS_TOKEN: ${{ steps.vault.outputs.jfrog_token }}
 
-      - name: Build (skip tests, already verified)
-        run: mvn -B clean package -DskipTests
+      - name: Verify JFrog connectivity
+        run: jf rt ping
 
       - name: Configure Maven repo for JFrog deploy
         run: |
           jf mvnc \
+            --repo-resolve-releases=${{ env.JFROG_REPO }} \
+            --repo-resolve-snapshots=${{ env.JFROG_REPO }} \
             --repo-deploy-releases=${{ env.JFROG_REPO }} \
             --repo-deploy-snapshots=${{ env.JFROG_REPO }}
 
       - name: Build and deploy with JFrog CLI (collects build-info)
+        env:
+          JFROG_CLI_BUILD_NAME: spring-petclinic
+          JFROG_CLI_BUILD_NUMBER: ${{ github.run_number }}
         run: |
-          jf mvn clean install -DskipTests
+          jf rt build-collect-env
+          jf mvn clean deploy -DskipTests
           jf rt build-publish
-
-      - name: Publish build summary
-        run: jf rt build-collect-env
